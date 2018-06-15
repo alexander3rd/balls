@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>BALLS</title>
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/earlyaccess/notosanskr.css);
+      font-family: 'Noto Sans KR', sans-serif;
+    </style>
+
+    <!-- Custom styles for this template -->
+    <link href="css/freelancer.css" rel="stylesheet">
+  </head>
+
+  <body id="page-top">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg bg-secondary fixed-top text-uppercase" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand js-scroll-trigger" href="#page-top">BALLS</a>
+          <button class="navbar-toggler navbar-toggler-right text-uppercase bg-primary text-white rounded" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            Menu
+            <i class="fa fa-bars"></i>
+          </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item mx-0 mx-lg-1">
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#game">GAME</a>
+            </li>
+            <li class="nav-item mx-0 mx-lg-1">
+              <a class="nav-link py-3 px-0 px-lg-3 rounded js-scroll-trigger" href="#info">INFO</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Game Section -->
+    <section class="bg-primary text-white mb-0" id="game">
+      <div class="container">
+        <br>
+        <div class="text-center col-lg-12 ml-auto ">
+          <button type="button" class="btn btn-danger" onclick="setValue()" style="width:250px;height:50px;"><span id="gameStartButton">GAME START</span></button>
+        </div>
+        <div class="col-lg-12 ml-auto">
+          <br>
+          <canvas id="gameCanvas" width="960" height="480"></canvas>
+          <style>
+            * { padding: 0; margin: 0; }
+            canvas {background: #eee; display: block; margin: 0 auto; }
+          </style>
+          <script type="text/javascript">
+            var gameCanvas = document.getElementById("gameCanvas");
+            var gameContext = gameCanvas.getContext("2d");
+
+            var score;
+            var count;
+            var itemEnemySpeed = [0.5, 1, 1.5, 2];
+            var itemEnemySize = [0.5, 1, 1.5, 2];
+            var itemHeroSize = [0.5, 1, 1.5, 2];
+            var enemy1;
+            var enemy2;
+            var enemy3;
+            var enemySpeed = 4;
+            var enemySize = 20;
+            var heroHeight;
+            var heroWidth;
+            var heroX;
+            var heroY;
+            var heroSpeed;
+            var heroIsLive;
+
+            var clientX = 0.0;
+            var clientY = 0.0;
+
+            // init property 
+            function init() {
+              heroHeight = 40;
+              heroWidth = 40;
+              heroX = (gameCanvas.width-heroWidth)/2;
+              heroY = (gameCanvas.height-heroHeight)/2;
+              heroSpeed = 3;
+              heroIsLive = true;
+              enemy1 = {
+                enemyLocationX : 20,
+                enemyLocationY : 20,
+                enemyMoveX : enemySpeed,
+                enemyMoveY : enemySpeed,
+                enemySize : enemySize
+              }
+              enemy2 = {
+                enemyLocationX : 20,
+                enemyLocationY : 160,
+                enemyMoveX : enemySpeed,
+                enemyMoveY : enemySpeed,
+                enemySize : enemySize
+              }
+              enemy3 = {
+                enemyLocationX : 20,
+                enemyLocationY : 300,
+                enemyMoveX : enemySpeed,
+                enemyMoveY : enemySpeed,
+                enemySize : enemySize
+              }
+              score = 0;
+              count = 0;
+            }
+
+            gameCanvas.addEventListener('mousemove', function(e) {
+                  clientX = e.clientX;
+                  clientY = e.clientY;
+            }); 
+
+            function getPos(e) {
+              var dx = e.offsetLeft;
+              var dy = e.offsetTop;
+              while (e.offsetParent) {
+                e = e.offsetParent;
+                dx += e.offsetLeft;
+                dy += e.offsetTop;
+              }
+              return {"dx": dx, "dy": dy};
+            }
+            
+            function  trackHero(){
+              var pos = getPos(gameCanvas);
+              heroX = clientX - (heroWidth/2) - pos.dx;
+              heroY = clientY - (heroHeight/2) - pos.dy;
+              // only for test, prevent bug
+              if(heroX < -150 || heroY < -150){
+                heroX = (gameCanvas.width-heroWidth)/2;
+                heroY = (gameCanvas.height-heroHeight)/2;
+              }
+              window.requestAnimationFrame(trackHero);
+            }
+            trackHero();
+
+            function collisionDetection() {
+              // hero-rect, enemy-cir collision
+              if(enemy1.enemyLocationX > heroX && enemy1.enemyLocationX < heroX + heroWidth && enemy1.enemyLocationY >  heroY && enemy1.enemyLocationY < heroY + heroHeight){
+                heroIsLive = false;
+                clearInterval(gameInterval)
+              } 
+              if(enemy2.enemyLocationX > heroX && enemy2.enemyLocationX < heroX + heroWidth && enemy2.enemyLocationY >  heroY && enemy2.enemyLocationY < heroY + heroHeight){
+                heroIsLive = false;
+                clearInterval(gameInterval)
+              } 
+              if(enemy3.enemyLocationX > heroX && enemy3.enemyLocationX < heroX + heroWidth && enemy3.enemyLocationY >  heroY && enemy3.enemyLocationY < heroY + heroHeight){
+                heroIsLive = false;
+                clearInterval(gameInterval)
+              }
+            }
+
+            function drawEnemy1() {
+              gameContext.beginPath();
+              gameContext.arc(enemy1.enemyLocationX, enemy1.enemyLocationY, enemy1.enemySize * itemEnemySize[getItem2], 0, Math.PI*2);
+              gameContext.fillStyle = "#db3444";
+              gameContext.fill();
+              gameContext.closePath();
+            }
+
+            function drawEnemy2() {
+              gameContext.beginPath();
+              gameContext.arc(enemy2.enemyLocationX, enemy2.enemyLocationY, enemy2.enemySize * itemEnemySize[getItem2], 0, Math.PI*2);
+              gameContext.fillStyle = "#db3444";
+              gameContext.fill();
+              gameContext.closePath();
+            }
+
+            function drawEnemy3() {
+              gameContext.beginPath();
+              gameContext.arc(enemy3.enemyLocationX, enemy3.enemyLocationY, enemy3.enemySize * itemEnemySize[getItem2], 0, Math.PI*2);
+              gameContext.fillStyle = "#db3444";
+              gameContext.fill();
+              gameContext.closePath();
+            }
+
+            function drawHero() {
+              gameContext.beginPath();
+              gameContext.rect(heroX, heroY, heroWidth * itemHeroSize[getItem3], heroHeight * itemHeroSize[getItem3]);
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fill();
+              gameContext.closePath();
+            }
+
+            function drawScore(){
+              gameContext.font = "20px FontAwesome";
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fillText("Score : "+score, 10, 28);
+            }
+
+            function drawResult(){
+              gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+              gameContext.beginPath();
+              gameContext.rect(0, gameCanvas.height/2-50, gameCanvas.width, 120);
+              gameContext.fillStyle = "#E0E3DA";
+              gameContext.fill();
+              gameContext.closePath();
+              gameContext.font = "italic bold 30px FontAwesome";
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fillText("Your score is", gameCanvas.width/2 - 100, gameCanvas.height/2);
+              gameContext.fillText((score-2), gameCanvas.width/2 - 100, (gameCanvas.height/2)+50);
+            }
+
+            function drawCountNumber(num){
+              gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+              gameContext.font = "italic bold 90px FontAwesome";
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fillText(num, (gameCanvas.width-heroWidth)/2-10, (gameCanvas.height-heroHeight)/2+50);
+            }
+
+            function drawCountString(str){
+              gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+              gameContext.font = "italic bold 90px FontAwesome";
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fillText(str, (gameCanvas.width-heroWidth)/2-70, (gameCanvas.height-heroHeight)/2+50);
+            }
+
+            function drawWaiting(){
+              gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+              gameContext.font = "italic bold 50px FontAwesome";
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fillText("Wait for your transaction... ", (gameCanvas.width-heroWidth)/2-300, (gameCanvas.height-heroHeight)/2+50);
+            }
+
+            function drawLobby(){
+              gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+              gameContext.font = "italic bold 40px FontAwesome";
+              gameContext.fillStyle = "#2c3e50";
+              gameContext.fillText("Press the 'GAME START' button", (gameCanvas.width-heroWidth)/2-270, (gameCanvas.height-heroHeight)/2+50);
+            }
+
+            function enemyCountByScore() {
+              if ( score > 0) {
+                drawEnemy1();
+                enemy1.enemyLocationX += ( enemy1.enemyMoveX * itemEnemySpeed[getItem1]);
+                enemy1.enemyLocationY += ( enemy1.enemyMoveY * itemEnemySpeed[getItem1]);
+              }
+              if ( score >= 500 ){
+                drawEnemy2();
+                enemy2.enemyLocationX += ( enemy2.enemyMoveX * itemEnemySpeed[getItem1] * 0.8);
+                enemy2.enemyLocationY += ( enemy2.enemyMoveY * itemEnemySpeed[getItem1] * 1.2);
+              }
+              if ( score >= 1000 ){
+                drawEnemy3();
+                enemy3.enemyLocationX += ( enemy3.enemyMoveX * itemEnemySpeed[getItem1] * 1.4);
+                enemy3.enemyLocationY += ( enemy3.enemyMoveY * itemEnemySpeed[getItem1] * 0.6);
+              }
+            }
+
+            function enemySpeedByScore() {
+              if(score == 250){
+                enemy1.enemyMoveX *= 1.5;
+                enemy1.enemyMoveY *= 1.5;
+                enemy2.enemyMoveX *= 1.5;
+                enemy2.enemyMoveY *= 1.5;
+                enemy3.enemyMoveX *= 1.5;
+                enemy3.enemyMoveY *= 1.5;
+                heroWidth *= 1.1;
+                heroHeight *= 1.1;
+              }
+              if(score == 750){
+                enemy1.enemyMoveX *= 1.5;
+                enemy1.enemyMoveY *= 1.5;
+                enemy2.enemyMoveX *= 1.5;
+                enemy2.enemyMoveY *= 1.5;
+                enemy3.enemyMoveX *= 1.5;
+                enemy3.enemyMoveY *= 1.5;
+                heroWidth *= 1.1;
+                heroHeight *= 1.1;
+              }
+              if(score == 1250) {
+                enemy1.enemyMoveX *= 0.2;
+                enemy1.enemyMoveY *= 0.2;
+                enemy2.enemyMoveX *= 1.2;
+                enemy2.enemyMoveY *= 1.2;
+                enemy3.enemyMoveX *= 1.2;
+                enemy3.enemyMoveY *= 1.2;
+                heroWidth *= 1.1;
+                heroHeight *= 1.1;
+              }
+              if(score == 1750) {
+                enemy1.enemyMoveX *= 1.2;
+                enemy1.enemyMoveY *= 1.2;
+                enemy2.enemyMoveX *= 1.2;
+                enemy2.enemyMoveY *= 1.2;
+                enemy3.enemyMoveX *= 1.2;
+                enemy3.enemyMoveY *= 1.2;
+                heroWidth *= 1.1;
+                heroHeight *= 1.1;
+              }
+            }
+
+            function ifEnemyHitEdge() {
+              // hit left & right
+              if(enemy1.enemyLocationX + enemy1.enemyMoveX > gameCanvas.width-enemy1.enemySize || enemy1.enemyLocationX + enemy1.enemyMoveX < enemy1.enemySize)
+                  enemy1.enemyMoveX = -enemy1.enemyMoveX;
+              if(enemy2.enemyLocationX + enemy2.enemyMoveX > gameCanvas.width-enemy2.enemySize || enemy2.enemyLocationX + enemy2.enemyMoveX < enemy2.enemySize)
+                enemy2.enemyMoveX = -enemy2.enemyMoveX;
+              if(enemy3.enemyLocationX + enemy3.enemyMoveX > gameCanvas.width-enemy3.enemySize || enemy3.enemyLocationX + enemy3.enemyMoveX < enemy3.enemySize)
+                enemy3.enemyMoveX = -enemy3.enemyMoveX;
+              
+              // hit top & bottom
+              if(enemy1.enemyLocationY + enemy1.enemyMoveY > gameCanvas.height-enemy1.enemySize || enemy1.enemyLocationY + enemy1.enemyMoveY < enemy1.enemySize)
+                  enemy1.enemyMoveY = -enemy1.enemyMoveY;
+              if(enemy2.enemyLocationY + enemy2.enemyMoveY > gameCanvas.height-enemy2.enemySize || enemy2.enemyLocationY + enemy2.enemyMoveY < enemy2.enemySize)
+                enemy2.enemyMoveY = -enemy2.enemyMoveY;
+              if(enemy3.enemyLocationY + enemy3.enemyMoveY > gameCanvas.height-enemy3.enemySize || enemy3.enemyLocationY + enemy3.enemyMoveY < enemy3.enemySize)
+                enemy3.enemyMoveY = -enemy3.enemyMoveY;
+            }
+
+            function draw() {
+              if(count == 50){
+                drawCountNumber(3);
+              } else if (count == 1050){
+                drawCountNumber(2);
+              } else if (count == 2050){
+                drawCountNumber(1);
+              } else if (count == 3050){
+                drawCountString("Go !!");
+              } else if (count >= 4050) {
+                if(heroIsLive){
+                  gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+                  drawHero();
+                  drawScore();
+                  enemyCountByScore();
+                  enemySpeedByScore();
+                  ifEnemyHitEdge();
+                  collisionDetection();
+                  score += 2;
+                } else {
+                  // death
+                  drawResult();
+                }
+              }
+              count += 10;
+            }
+
+            var gameInterval;
+            function selectMenu(menu) {
+              if(menu == 0){
+                // lobby
+                gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+                drawLobby();
+              } else if (menu == 1){
+                // waiting
+                gameContext.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+                drawWaiting();
+              } else if (menu == 2){
+                // gaming
+                init();
+                gameInterval = setInterval(draw, 10); 
+              }
+            }
+
+            // default
+            init();
+            selectMenu(0);
+          </script>
+        </div>
+        <div class="col-lg-12 ml-auto">
+          <br>
+          <canvas id="gameItemCanvas" width="960" height="60"></canvas>
+          <script type="text/javascript">
+            var gameItemCanvas = document.getElementById("gameItemCanvas");
+            var gameItemContext = gameItemCanvas.getContext("2d");
+            var getItem1 = 1;
+            var getItem2 = 1;
+            var getItem3 = 1;
+            function drawGameItem(){
+              gameItemContext.clearRect(0, 0, gameItemCanvas.width, gameItemCanvas.height);
+              gameItemContext.font = "bold 18px Arioal";
+              gameItemContext.fillStyle = "#2c3e50";
+              gameItemContext.fillText("Ball Speed  X " + itemEnemySpeed[getItem1], 40, 36);
+              gameItemContext.fillText("Ball Size  X " + itemEnemySize[getItem2], 420, 36);
+              gameItemContext.fillText("Hero Size  X " + itemHeroSize[getItem3], 760, 36);
+
+              gameItemContext.fillText("Debug  X " + getItem1, 40, 50);
+              gameItemContext.fillText("Debug  X " + getItem2, 420, 50);
+              gameItemContext.fillText("Debug  X " + getItem3, 760, 50);
+            }
+            drawGameItem();
+          </script>
+        </div>
+      </div>
+    </section>
+
+    <!-- info Section -->
+    <section id="info">
+      <div class="container">
+        <h2 class="text-center text-uppercase text-secondary mb-0">info</h2><br><br>
+          <div class="col-lg-10 mx-auto my_text">
+            <br>
+            <p>BALLS 는 마우스를 이용하여 공을 피하는 게임입니다.</p>
+            <p>게임 시작시 공의 속도, 공의 크기, 주인공의 크기가 랜덤하게 정해지며, 움직이는 공을 오랜시간동안 피하면 높은 점수를 얻을 수 있습니다.</p>
+            <p>사용되는 랜덤 정보는 Ropsten Test Network 상에서 가져오며, 사용자의 정보와 함께 기록합니다.</p>
+            <p>현재는 특정 ETH 지불 없이 Transaction 을 기록할 Gas 만으로 게임을 플레이 할 수 있으며, 이는 차후 수정될 예정입니다.</p>
+            <br><br>
+          </div>
+          <div class="col-lg-10 mx-auto">
+             <p class="lead">Contract Address : <span id="contractAddr"></span></p>
+             <p class="lead">Account  Address : <span id="accountAddr"></span></p>
+             <p class="lead">Last Block : <span id="lastBlock"></span></p>
+             <p class="lead">Your Transaction : <span id="transactionId"></span></p>
+             <p class="lead">Your Tx Status : <span id="transactionStatus"></span></p>
+          </div>
+          <br>
+          <style type="text/css">
+            .my_text
+            {
+                font-family: 'Noto Sans KR', sans-serif;
+                font-size: 18px;
+            }
+          </style> 
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer text-center">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-6 mb-5 mb-lg-0">
+            <h4 class="text-uppercase mb-4">CONTACT</h4>
+            <p class="lead mb-0">lch6339@gmail.com</p>
+          </div>
+          <div class="col-md-6 mb-5 mb-lg-0">
+            <h4 class="text-uppercase mb-4">ABOUT</h4>
+            <ul class="list-inline mb-0">
+              <li class="list-inline-item">
+                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="https://github.com/alexander3rd" target="_blank">
+                  <i class="fa fa-fw fa-github"></i>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a class="btn btn-outline-light btn-social text-center rounded-circle" href="https://steemit.com/@poka/" target="_blank">
+                  <i class="fa fa-fw fa-steemit"></i>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div class="copyright py-4 text-center text-white">
+      <div class="container">
+        <small>Copyright &copy; alexander3rd</small>
+      </div>
+    </div>
+
+    <!-- Scroll to Top Button (Only visible on small and extra-small screen sizes) -->
+    <div class="scroll-to-top d-lg-none position-fixed ">
+      <a class="js-scroll-trigger d-block text-center text-white rounded" href="#page-top">
+        <i class="fa fa-chevron-up"></i>
+      </a>
+    </div>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for this template -->
+    <script src="js/freelancer.min.js"></script>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.js"></script>
+    <script>
+      var contractAddress = '0x555f65537102f4229f74B3Ce59A21c4e05a014B8';
+      var abi = [{"constant":false,"inputs":[],"name":"_chooseValueForItem","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"insertCoin","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getItem","outputs":[{"name":"","type":"uint256"},{"name":"","type":"uint256"},{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"user","outputs":[{"name":"account","type":"address"},{"name":"name","type":"string"},{"name":"item1","type":"uint256"},{"name":"item2","type":"uint256"},{"name":"item3","type":"uint256"},{"name":"score","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}];
+
+      var userDataContract;
+      var userData;
+
+      window.addEventListener('load', function() {
+      // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+          // Use Mist/MetaMask's provider
+          window.web3 = new Web3(web3.currentProvider);
+        } else {
+          console.log('No web3? You should consider trying MetaMask!')
+          // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
+          window.web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+        // Now you can start your app & access web3 freely:
+        startApp();
+      });
+
+      function startApp() {
+        userDataContract = web3.eth.contract(abi);
+        userData = userDataContract.at(contractAddress);
+        document.getElementById('contractAddr').innerHTML = getLink(contractAddress);
+        web3.eth.getAccounts(function(e,r){
+          document.getElementById('accountAddr').innerHTML = getLink(r[0]);
+        });
+        getLastBlock();
+      }
+
+      function getLink(addr) {
+        return '<a target="_blank" href=https://ropsten.etherscan.io/address/' + addr + '>' + addr +'</a>';
+      }
+
+      function getLastBlock() {
+        web3.eth.getBlockNumber(function(e,r){
+          document.getElementById('lastBlock').innerHTML = r;
+        });
+      }
+
+      function getRandomItem() {
+        userData.getItem(function(e,r){
+          getItem1 = r[0]-1;
+          getItem2 = r[1]-1;
+          getItem3 = r[2]-1;
+          drawGameItem();
+        });
+      }
+
+      function setValue() {
+        var txid;
+
+        // for users before signing in
+        web3.eth.getAccounts(function(e,r){
+          document.getElementById('accountAddr').innerHTML = getLink(r[0]);
+        });
+
+        userData.insertCoin(function(e,r){
+          selectMenu(1);
+          document.getElementById('gameStartButton').innerHTML = 'Loading ...';
+          document.getElementById('transactionId').innerHTML = '<a target="_blank" href=https://ropsten.etherscan.io/tx/' + r + '>' + r +'</a>';
+          document.getElementById('transactionStatus').innerHTML = 'Pending ...' 
+          document.getElementById('transactionStatus').style.cssText ='color:red;';
+          txid = r;
+        });
+
+        var filter = web3.eth.filter('latest');
+        filter.watch(function(e, r) {
+          getLastBlock();
+          web3.eth.getTransaction(txid, function(e,r){
+            if (r != null && r.blockNumber > 0) {
+              document.getElementById('transactionStatus').innerHTML = 'Success !!';
+              document.getElementById('transactionStatus').style.cssText ='color:green;';
+              document.getElementById('gameStartButton').innerHTML = 'REGAME';
+              // random item get after tx success
+              getRandomItem();
+              selectMenu(2);
+              filter.stopWatching();
+            }
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
